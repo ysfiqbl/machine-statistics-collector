@@ -1,0 +1,50 @@
+version: "3"
+
+services:
+  server:
+    container_name: app_server
+    build: ./server
+    command: celery -A app worker --concurrency=20 --loglevel=info
+    env_file:
+     - '.env'
+    volumes:
+      - "./server:/app"
+    networks:
+      - intranet
+
+  db:
+    container_name: db
+    image: 'mariadb:10.3'
+    env_file:
+     - '.env'
+    volumes:
+      - "db-data:/var/lib/mysql"
+      - "./server/db_scripts:/db_scripts"
+    networks:
+      - intranet
+
+  rabbitmq:
+    container_name: broker
+    image: 'rabbitmq:3.7.0-alpine'
+    ports:
+      - '5673:5372'
+    networks:
+      - 'intranet'
+
+  client_1:
+    container_name: client_1
+    build: ./client_ubuntu
+    networks:
+      - intranet
+
+  client_2:
+    container_name: client_2
+    build: ./client_ubuntu
+    networks:
+      - intranet
+
+volumes:
+  db-data:
+
+networks:
+  intranet:
